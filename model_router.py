@@ -27,7 +27,7 @@ class Casos(nn.Module):
 
 input_dim = 3 
 model = Casos(input_dim)
-model.load_state_dict(torch.load('casos_model.pth'))
+model.load_state_dict(torch.load('best_model.pth'))
 model.eval()
 
 app = Flask(__name__)
@@ -49,7 +49,7 @@ def predict():
     with torch.no_grad():
         prediction = model(input_tensor)
     
-    return jsonify({'casos': prediction.item()})
+    return jsonify({'casos': round(prediction.item())})
 
 if __name__ == '__main__':
     app.run(debug=True)
