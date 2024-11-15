@@ -1,9 +1,7 @@
 from flask import Flask, request, jsonify
 import torch
 import torch.nn as nn
-import numpy as np
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
+import torch.nn.functional as F
 
 class Casos(nn.Module):
     def __init__(self, input_dim):
@@ -17,39 +15,35 @@ class Casos(nn.Module):
             nn.Dropout(0.75),
             nn.Linear(32, 16),
             nn.ReLU(),
-            nn.Dropout(0.7), 
+            nn.Dropout(0.7),
             nn.Linear(16, 1)
         )
 
     def forward(self, x):
         return self.rede(x)
 
-
-input_dim = 3 
-model = Casos(input_dim)
-model.load_state_dict(torch.load('best_model.pth'))
-model.eval()
+# Carregar o modelo salvo
+modelo = Casos(3)
+modelo.load_state_dict(torch.load('best_model.pth'))
+modelo.eval()
 
 app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json(force=True)
-    temp_max = data['temp_max']
     temp_min = data['temp_min']
+    temp_max = data['temp_max']
     precipitacao_total = data['precipitacao_total']
     
-    input_data = pd.DataFrame([[temp_max, temp_min, precipitacao_total]], columns=['temp_max', 'temp_min', 'precipitacao_total'])
-    
-    scaler = StandardScaler()
-    input_data_scaled = scaler.fit_transform(input_data)
-    
-    input_tensor = torch.FloatTensor(input_data_scaled)
+    features = torch.tensor([[temp_min, temp_max, precipitacao_total]], dtype=torch.float32)
     
     with torch.no_grad():
-        prediction = model(input_tensor)
+        predicao = modelo(features)
     
-    return jsonify({'casos': round(prediction.item())})
+    predicao = predicao.numpy().tolist()
+    
+    return jsonify({'casos': round(predicao[0][0])})
 
 if __name__ == '__main__':
     app.run(debug=True)
