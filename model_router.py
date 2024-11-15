@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 class Casos(nn.Module):
     def __init__(self, input_dim):
@@ -22,7 +21,6 @@ class Casos(nn.Module):
     def forward(self, x):
         return self.rede(x)
 
-# Carregar o modelo salvo
 modelo = Casos(3)
 modelo.load_state_dict(torch.load('best_model.pth'))
 modelo.eval()
